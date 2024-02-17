@@ -1,18 +1,20 @@
 const express = require('express')
 const bodyParser = require('body-parser')
 const mongoose = require('mongoose')
+const cors = require('cors')
 
 const {Restaurant} = require('./schema.cjs')
 
 const app = express()
 app.use(bodyParser.json())
+app.use(cors())
 
 
 async function connectToDb() {
     try{
         await mongoose.connect('mongodb+srv://Keerthana:0423Keerthu@cluster0.2szxvqv.mongodb.net/swiggy?retryWrites=true&w=majority')
         console.log('DB connection established')
-        const port = 8000
+        const port = process.env.Port || 8000
             app.listen(port, function(request, response){
             console.log(`Listening on port ${port}...`)
 })
@@ -53,6 +55,32 @@ app.get('/get-restaurant-details', async function(request, response){
         response.status(500).json({
             "status" : "failure",
             "message" : "could not fetch",
+            "error" : error
+        })
+    }
+})
+
+app.delete('/delete-restaurant-detail/:id',async function(request,response){
+    try{
+       const restaurant = await Restaurant.findById(request.params.id)
+       if(restaurant){
+        await Restaurant.findByIdAndDelete(request.params.id)
+        response.status(201).json({
+            "status" : "success",
+            "message" : "deleted successfully"
+            })
+       }
+       else{
+        response.status(500).json({
+            "status" : "failure",
+            "message" : "entry not found"
+        })
+       }
+        
+    } catch (error){
+ response.status(500).json({
+            "status" : "failure",
+            "message" : "could not delete",
             "error" : error
         })
     }
